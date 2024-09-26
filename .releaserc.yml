@@ -1,0 +1,69 @@
+branches:
+  - main
+
+plugins:
+  - - "@semantic-release/commit-analyzer"
+    - preset: conventionalcommits
+      releaseRules:
+        - type: build
+          scope: deps
+          release: patch
+        - type: build
+          scope: deps-dev
+          release: patch
+        - type: refactor
+          release: patch
+        - type: style
+          release: patch
+        - type: ci
+          release: patch
+        - type: chore
+          release: patch
+        - type: docs
+          release: patch
+        - breaking: true
+          release: major
+  - - "@semantic-release/release-notes-generator"
+    - preset: conventionalcommits
+  - - "@semantic-release/changelog"
+    - changelogFile: CHANGELOG.md
+      changelogTitle: "# Axone Jackal auth proxy"
+  - - "@google/semantic-release-replace-plugin"
+    - replacements:
+        - files: [version]
+          from: ^.+$
+          to: ${nextRelease.version}
+          countMatches: true
+          results:
+            - file: version
+              hasChanged: true
+              numMatches: 1
+              numReplacements: 1
+  - - "@semantic-release/exec"
+    - prepareCmd: |
+        ./scripts/bump-module.sh
+  - - "@semantic-release/exec"
+    - prepareCmd: |
+        make build-go-all
+  - - "@semantic-release/github"
+    - assets:
+        - name: jackal-auth-proxy_darwin_amd64
+          label: Binary - Darwin amd64
+          path: "./target/dist/darwin/amd64/jackal-auth-proxy"
+        - name: jackal-auth-proxy_darwin_arm64
+          label: Binary - Darwin arm64
+          path: "./target/dist/darwin/arm64/jackal-auth-proxy"
+        - name: jackal-auth-proxy_linux_amd64
+          label: Binary - Linux amd64
+          path: "./target/dist/linux/amd64/jackal-auth-proxy"
+        - name: jackal-auth-proxy_windows_amd64.exe
+          label: Binary - Windows amd64
+          path: "./target/dist/windows/amd64/jackal-auth-proxy.exe"
+  - - "@semantic-release/git"
+    - assets:
+        - CHANGELOG.md
+        - version
+        - go.mod
+        - go.sum
+        - "**/*.go"
+      message: "chore(release): perform release ${nextRelease.version}"
